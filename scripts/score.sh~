@@ -1,0 +1,29 @@
+#!/bin/bash
+
+if [ $# != 2 ]
+then
+    echo "Usage: `basename $0` xml tgtdir"
+    echo "e,g, : `basename $0` word.xml scoring"
+    exit 1
+fi
+
+export PATH=/usr/local/teach/scoring/F4DE-3.2.4/bin:/usr/local/teach/perl/perls/perl-5.16.3/bin:$PATH
+
+SRCXML=$1
+TGTDIR=$2
+
+name=`basename $SRCXML .xml`
+
+# create directories for scoring
+
+mkdir -p $TGTDIR/${name}-tmp
+mkdir -p $TGTDIR/${name}
+
+cp $SRCXML $TGTDIR/${name}.kwslist.xml
+
+BABEL13_Scorer -sys $TGTDIR/${name}.kwslist.xml -dbDir /home/mjfg/MLSALT/Practical2/IndusDB.20150501 -comp $TGTDIR/${name}-tmp -res $TGTDIR/${name} -exp KWS13_CUED_IARPA-babel202b-v1.0d_conv-dev_BaDev_KWS_FullLP_BaseLR_NTAR_p-test_1
+
+# tidy-up scoring and copy generated files
+
+rm -r $TGTDIR/${name}-tmp
+cp $TGTDIR/${name}/Ensemble.AllOccur.png $TGTDIR/${name}-det.png
