@@ -1,5 +1,5 @@
 !.gitignore
-!scripts/
-!*.py
+scripts/
+!experiment/
 IndusDB/
 lib/
