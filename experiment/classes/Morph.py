@@ -13,7 +13,7 @@ def getKWlist(qaddr):
 	return kwlist
 
 class Morph:
-	""" The morphologu defintion"""
+	""" The morphological decomposition"""
 	def _init_(self):
 		pass
 	def getmorphdict(self,dpath):
@@ -49,7 +49,7 @@ class Morph:
 				mlist = m[dict_list[i].get('word')]
 				mlen = float(len(mlist))
 				for mitem in mlist:
-					ocsv.writerow([fname,channel,tbeg,str(float(dur)/mlen),mitem,str(float(score)/mlen)])
+					ocsv.writerow([fname,channel,tbeg,str(float(dur)/mlen),mitem,str(float(score))])
 					tbeg = str(float(tbeg) + float(dur)/mlen)
 			
 			else:

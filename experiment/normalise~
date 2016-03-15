@@ -1,0 +1,84 @@
+#!/usr/bin/env python
+import os
+import xml.etree.ElementTree as et
+import xml.dom.minidom as minidom
+import pickle
+
+from classes.Morph import Morph
+
+
+def getQxmlstr(qdict,kwlist_filename="IARPA-babel202b-v1.0d_conv-dev.kwlist.xml", language="swahili", system_id = ""):
+	root = et.Element("kwslist",kwlist_filename=kwlist_filename, language=language, system_id=system_id)
+	for kwid, kwvalue in qdict.items():
+		kwele = et.SubElement(root,"detected_kwlist",kwid=str(kwid),oov_count="0",search_time="0.0")
+		for k in kwvalue:
+			temp = et.SubElement(kwele,"kw",file=k.get('file_name'),
+					channel=k.get('channel'),tbeg=str(k.get('tbeg')),
+					dur=str(k.get('dur')),score=str(k.get('score')),decision=k.get('decision'))
+		
+		
+	xmlstr = minidom.parseString(et.tostring(root)).toprettyxml(indent="\t")
+	temp_list = xmlstr.split('\n')
+	xmlstr = '\n'.join(temp_list[1:])
+	return xmlstr
+	pass
+
+def getQdict(qfile):
+	tree = et.parse(qfile)
+	root = tree.getroot()
+	qdict = {}
+	for r in root.iter('detected_kwlist'):
+		kwvalue = []
+		for r2 in r.iter('kw'):
+			temp_dict = { 'channel' : r2.attrib['channel'],
+				'decision' : r2.attrib['decision'],
+				'dur' : float(r2.attrib['dur']),
+				'file_name' : r2.attrib['file'],
+				'score' : float(r2.attrib['score']),
+				'tbeg' : float(r2.attrib['tbeg'])}
+			kwvalue.append(temp_dict)
+		qdict[r.attrib['kwid']] = kwvalue
+	return qdict
+
+def normdict2(qdict):
+	for kwid,kval in qdict.items():
+		s = 0.0
+		for k in kval:
+			s = s+(1.0/k['score'])**(1.0/k['dur'])
+		for i in range(len(kval)):
+			kval[i]['score'] = float((1.0/kval[i]['score'])**(1.0/kval[i]['dur'])/s)
+		qdict[kwid] = kval
+
+def normdict3(qdict):
+	for kwid,kval in qdict.items():
+		s = 0.0
+		for k in kval:
+			s = s+k['score']**(1.0/k['dur'])
+		for i in range(len(kval)):
+			kval[i]['score'] = float(kval[i]['score']**(1.0/kval[i]['dur'])/s)
+		qdict[kwid] = kval
+
+
+def normdict(qdict):
+	for kwid,kval in qdict.items():
+		s = 0.0
+		for k in kval:
+			s = s+k['score']
+		for i in range(len(kval)):
+			kval[i]['score'] = float(kval[i]['score']/s)
+		qdict[kwid] = kval
+
+if __name__ == "__main__":
+	import argparse
+	parser = argparse.ArgumentParser(description='CTM file to Indexer.')
+	parser.add_argument('--kwsfile', type=str, default='./../lib/kws/word.xml', help='Address to the KWS file')
+	parser.add_argument('--outputfile', type=str, default="./output/word-normalise.xml", help='Normalised file')
+	args = parser.parse_args()
+	kwspath = args.kwsfile
+	outpath = args.outputfile
+	with open(kwspath,'r') as kwsfile:
+		qdict = getQdict(kwsfile)
+	normdict(qdict)
+	normdict2(qdict)
+	with open(outpath,'w') as opfile:
+		opfile.write(getQxmlstr(qdict))

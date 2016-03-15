@@ -1,0 +1,481 @@
+#!/usr/bin/env python
+import os
+import subprocess
+import re
+import math
+def tmv(xml_path,fol_path):
+	fcall = './../scripts/score.sh '+xml_path+' '+fol_path
+	os.system(fcall)
+	fcall = './../scripts/termselect.sh ./../lib/terms/ivoov.map '+xml_path+' '+fol_path+' all'
+	output = subprocess.check_output(fcall, shell=True)
+	tmw = re.search('all TWV=(.*?)theshold',output)
+	a1 = float(tmw.group(1))
+	return a1
+
+def exponen(tmv1,tmv2):
+	e1 = math.e**(84.0*tmv1)
+	e2 = math.e**(84.0*tmv2)
+	w1 = e1/(e1+e2)
+	w2 = e2/(e1+e2)
+	return w1,w2
+'''
+with open(sys1path,'r') as sys1file:
+		sys1dict = getQdict(sys1file)
+	with open(sys2path,'r') as sys2file:
+		sys2dict = getQdict(sys2file)
+	tmv1 = results(sys1path,'./output/exp9')	
+	tmv2 = results(sys2path,'./output/exp9')
+	w1,w2 = exponen(tmv1,tmv2)
+	print str(w1)
+	print str(w2)
+
+'''
+def results(tag,xml_path,fol_path):
+	fcall = './../scripts/termselect.sh ./../lib/terms/ivoov.map '+xml_path+' '+fol_path+' all'
+	output = subprocess.check_output(fcall, shell=True)
+	tmw = re.search('all TWV=(.*?)theshold',output)
+	a1 = '%.4f' % float(tmw.group(1))
+	fcall = './../scripts/termselect.sh ./../lib/terms/ivoov.map '+xml_path+' '+fol_path+' iv'
+	output = subprocess.check_output(fcall, shell=True)
+	iv = re.search('iv TWV=(.*?)theshold',output)
+	a2 = '%.4f' % float(iv.group(1))
+	fcall = './../scripts/termselect.sh ./../lib/terms/ivoov.map '+xml_path+' '+fol_path+' oov'
+	output = subprocess.check_output(fcall, shell=True)
+	oov = re.search('oov TWV=(.*?)theshold',output)
+	a3 = '%.4f' % float(oov.group(1))
+	fcall = './../scripts/termselect.sh ./length.map '+xml_path+' '+fol_path+' 1'
+	output = subprocess.check_output(fcall, shell=True)
+	oov = re.search('1 TWV=(.*?)theshold',output)
+	a4 = '%.4f' % float(oov.group(1))
+	fcall = './../scripts/termselect.sh ./length.map '+xml_path+' '+fol_path+' 2'
+	output = subprocess.check_output(fcall, shell=True)
+	oov = re.search('2 TWV=(.*?)theshold',output)
+	a5 = '%.4f' % float(oov.group(1))
+	fcall = './../scripts/termselect.sh ./length.map '+xml_path+' '+fol_path+' 3'
+	output = subprocess.check_output(fcall, shell=True)
+	oov = re.search('3 TWV=(.*?)theshold',output)
+	a6 = '%.4f' % float(oov.group(1))
+	fcall = './../scripts/termselect.sh ./length.map '+xml_path+' '+fol_path+' 4'
+	output = subprocess.check_output(fcall, shell=True)
+	oov = re.search('4 TWV=(.*?)theshold',output)
+	a7 = '%.4f' % float(oov.group(1))
+	r = tag + ' & ' + a1 + ' & ' + a2 + ' & ' + a3 + ' & ' + a4 + ' & ' + a5 + ' & ' + a6 + ' & ' + a7  
+	os.system('echo \''+r+ '\\'+'\\'+ '\\'+'\\'+'\' >> results.txt')
+
+def exp6():
+	os.system('rm -rf output/exp6')
+	os.system('mkdir output/exp6')
+	os.system('./syscombine --sys1file ./../lib/kws/word-sys2.xml --sys2file ./../lib/kws/word.xml --outputfile ./output/exp3/c1.xml')
+	os.system('./syscombine --sys1file ./output/exp3/c1.xml --sys2file ./../lib/kws/morph.xml --outputfile ./output/exp3/c2.xml')
+	os.system('./../scripts/score.sh ./../lib/kws/word.xml output/exp3')
+	os.system('./../scripts/score.sh ./../lib/kws/word-sys2.xml output/exp3')
+	os.system('./../scripts/score.sh ./../lib/kws/morph.xml output/exp3')
+	os.system('./../scripts/score.sh output/exp3/c2.xml output/exp3')
+	os.system('echo \'\\n\' >> results.txt')
+	os.system('echo Experiment 3 sys no normalisation equal weights to 2 systems >> results.txt')
+	os.system('echo System 1: Word >> results.txt')
+	os.system('./../scripts/termselect.sh ./../lib/terms/ivoov.map ./../lib/kws/word.xml output/exp3 all >> results.txt')
+	os.system('echo System 2: Word-sys2 >> results.txt')
+	os.system('./../scripts/termselect.sh ./../lib/terms/ivoov.map ./../lib/kws/word-sys2.xml output/exp3 all >> results.txt')
+	os.system('echo System 3:morph >> results.txt')
+	os.system('./../scripts/termselect.sh ./../lib/terms/ivoov.map ./../lib/kws/morph.xml output/exp3 all >> results.txt')
+	os.system('echo Combined system >> results.txt')
+	os.system('./../scripts/termselect.sh ./../lib/terms/ivoov.map output/exp3/c2.xml output/exp3 all >> results.txt')
+
+def exp1():
+	os.system('rm -rf output/exp1')
+	os.system('mkdir output/exp1')
+	os.system('./genindexer --ctmfile ./../lib/ctms/decode.ctm --outputfile ./output/exp1/decode.pkl')
+	os.system('./genkws --indxfile ./output/exp1/decode.pkl --outputfile ./output/exp1/decode-kws.xml')
+	os.system('./../scripts/score.sh output/exp1/decode-kws.xml output/exp1')
+	os.system('echo Experiment 1 Decode >> results.txt')
+	r = results('decode.xml','output/exp1/decode-kws.xml','output/exp1')
+
+def exp1a():
+	os.system('./../scripts/score.sh ./../lib/kws/word.xml output/exp1')
+	r = results('word.xml','./../lib/kws/word.xml','output/exp1')
+	os.system('./../scripts/score.sh ./../lib/kws/word-sys2.xml output/exp1')
+	r = results('word-sys2.xml','./../lib/kws/word.xml','output/exp1')
+	os.system('./../scripts/score.sh ./../lib/kws/morph.xml output/exp1')
+	r = results('morph.xml','./../lib/kws/morph.xml','output/exp1')
+
+	
+def exp1b():
+	os.system('./../scripts/score.sh ./../lib/kws/word.xml output/exp1')
+	r = results('word.xml','./../lib/kws/word.xml','output/exp1')
+
+	os.system('./../scripts/score.sh ./../lib/kws/word-sys2.xml output/exp1')
+	r = results('word-sys2.xml','./../lib/kws/word.xml','output/exp1')
+
+	os.system('./../scripts/score.sh ./../lib/kws/morph.xml output/exp1')
+	r = results('morph.xml','./../lib/kws/morph.xml','output/exp1')
+
+
+def exp2():
+	os.system('rm -rf output/exp2')
+	os.system('mkdir output/exp2')
+	os.system('./morphctm --ctmfile ./../lib/ctms/decode.ctm --dictfile ./../lib/dicts/morph.dct --outputfile ./output/exp2/decode-morph-man.ctm')
+	os.system('./morphqueries --queryfile ./../lib/kws/queries.xml \
+			--dictfile ./../lib/dicts/morph.kwslist.dct \
+			--outputfile ./output/exp2/queries-morph.xml')
+	os.system('./genindexer --ctmfile ./output/exp2/decode-morph-man.ctm --outputfile ./output/exp2/decode-morph-man.pkl')
+	os.system('./genkws --indxfile ./output/exp2/decode-morph-man.pkl \
+			--queryfile ./output/exp2/queries-morph.xml \
+			--outputfile ./output/exp2/decode-morph-man-kws.xml')
+	os.system('./../scripts/score.sh output/exp2/decode-morph-man-kws.xml output/exp2')
+	os.system('echo Manual decode-morph >> results.txt')
+	r = results('decode-morph-manual.xml','output/exp2/decode-morph-man-kws.xml','output/exp2')
+	os.system('echo '+r+' >> results.txt')
+
+def exp2a():
+	os.system('rm -rf output/exp2a')
+	os.system('mkdir output/exp2a')
+	os.system('./morphqueries --queryfile ./../lib/kws/queries.xml \
+			--dictfile ./../lib/dicts/morph.kwslist.dct \
+			--outputfile ./output/exp2a/queries-morph.xml')
+	os.system('./genindexer --ctmfile ./../lib/ctms/decode-morph.ctm --outputfile ./output/exp2a/reference-morph-man.pkl')
+	os.system('./genkws --indxfile ./output/exp2a/reference-morph-man.pkl \
+			--queryfile ./output/exp2a/queries-morph.xml \
+			--outputfile ./output/exp2a/reference-morph-man-kws.xml')
+	os.system('./../scripts/score.sh output/exp2a/reference-morph-man-kws.xml output/exp2a')
+	os.system('echo Manual decode-morph >> results.txt')
+	r = results('decode-morph.xml','output/exp2a/reference-morph-man-kws.xml','output/exp2a')
+	os.system('echo '+r+' >> results.txt')
+
+
+def exp4():
+	os.system('rm -rf output/exp4')
+	os.system('mkdir output/exp4')
+	os.system('./morphqueries --queryfile ./../lib/kws/queries.xml \
+			--dictfile ./../lib/dicts/morph.kwslist.dct \
+			--outputfile ./output/exp4/queries-morph.xml')
+	os.system('./genindexer --ctmfile ./../lib/ctms/decode-morph.ctm --outputfile ./output/exp4/decode-morph.pkl')
+	os.system('./genkws --indxfile ./output/exp4/decode-morph.pkl \
+			--queryfile ./output/exp4/queries-morph.xml \
+			--outputfile ./output/exp4/decode-morph-kws.xml')
+	os.system('./../scripts/score.sh output/exp4/decode-morph-kws.xml output/exp4')
+	os.system('echo \'\\n\' >> results.txt')
+	os.system('echo Manual decode-morph >> results.txt')
+	os.system('./../scripts/termselect.sh ./../lib/terms/ivoov.map output/exp4/decode-morph-kws.xml output/exp4 all >> results.txt')
+
+def exp5():
+	os.system('rm -rf output/exp5')
+	os.system('mkdir output/exp5')
+	os.system('./../scripts/')
+
+def exp3():
+	os.system('rm -rf output/exp3')
+	os.system('mkdir output/exp3')
+	os.system('./syscombine --sys1file ./../lib/kws/word-sys2.xml --sys2file ./../lib/kws/word.xml --outputfile ./output/exp3/c1.xml')
+	os.system('./syscombine --sys1file ./output/exp3/c1.xml --sys2file ./../lib/kws/morph.xml --outputfile ./output/exp3/c2.xml')
+	os.system('./../scripts/score.sh ./../lib/kws/word.xml output/exp3')
+	os.system('./../scripts/score.sh ./../lib/kws/word-sys2.xml output/exp3')
+	os.system('./../scripts/score.sh ./../lib/kws/morph.xml output/exp3')
+	os.system('./../scripts/score.sh output/exp3/c2.xml output/exp3')
+	os.system('echo \'\\n\' >> results.txt')
+	os.system('echo Experiment 3 sys no normalisation equal weights to 2 systems >> results.txt')
+	os.system('echo System 1: Word >> results.txt')
+	os.system('./../scripts/termselect.sh ./../lib/terms/ivoov.map ./../lib/kws/word.xml output/exp3 all >> results.txt')
+	os.system('echo System 2: Word-sys2 >> results.txt')
+	os.system('./../scripts/termselect.sh ./../lib/terms/ivoov.map ./../lib/kws/word-sys2.xml output/exp3 all >> results.txt')
+	os.system('echo System 3:morph >> results.txt')
+	os.system('./../scripts/termselect.sh ./../lib/terms/ivoov.map ./../lib/kws/morph.xml output/exp3 all >> results.txt')
+	os.system('echo Combined system >> results.txt')
+	os.system('./../scripts/termselect.sh ./../lib/terms/ivoov.map output/exp3/c2.xml output/exp3 all >> results.txt')
+
+
+
+def exp8():
+	os.system('echo \'\\n\' >> results.txt')
+	os.system('echo G.M. for combination, With STO and QN 3 Normalisation >> results.txt')
+	os.system('rm -rf output/exp8')
+	os.system('mkdir output/exp8')
+	os.system('./genindexer --ctmfile ./../lib/ctms/decode.ctm --outputfile ./output/exp8/decode.pkl')
+	os.system('./genkws --indxfile ./output/exp8/decode.pkl --outputfile ./output/exp8/decode-kws.xml')
+	os.system('./normalise --kwsfile ./output/exp8/decode-kws.xml --outputfile ./output/exp8/decode-kws-norm.xml')
+	os.system('./../scripts/score.sh output/exp8/decode-kws-norm.xml output/exp8')
+	r = results('decode.xml','output/exp8/decode-kws-norm.xml','output/exp8')
+
+	os.system('./normalise --kwsfile ./../lib/kws/word.xml --outputfile ./output/exp8/word-norm.xml')
+	os.system('./../scripts/score.sh ./output/exp8/word-norm.xml output/exp8')
+	r = results('word.xml','./output/exp8/word-norm.xml','output/exp8')
+
+	os.system('./normalise --kwsfile ./../lib/kws/word-sys2.xml --outputfile ./output/exp8/word-sys2-norm.xml')
+	os.system('./../scripts/score.sh ./output/exp8/word-sys2-norm.xml output/exp8')
+	r = results('word-sys2.xml','./output/exp8/word-sys2-norm.xml','output/exp8')
+
+	os.system('./normalise --kwsfile ./../lib/kws/morph.xml --outputfile ./output/exp8/morph-norm.xml')
+	os.system('./../scripts/score.sh ./output/exp8/morph-norm.xml output/exp8')
+	r = results('morph.xml','./output/exp8/morph-norm.xml','output/exp8')
+	
+
+	os.system('./morphctm --ctmfile ./../lib/ctms/decode.ctm --dictfile ./../lib/dicts/morph.dct --outputfile ./output/exp8/decode-morph-man.ctm')
+	os.system('./morphqueries --queryfile ./../lib/kws/queries.xml \
+			--dictfile ./../lib/dicts/morph.kwslist.dct \
+			--outputfile ./output/exp8/queries-morph.xml')
+	os.system('./genindexer --ctmfile ./output/exp8/decode-morph-man.ctm --outputfile ./output/exp8/decode-morph-man.pkl')
+	os.system('./genkws --indxfile ./output/exp8/decode-morph-man.pkl \
+			--queryfile ./output/exp8/queries-morph.xml \
+			--outputfile ./output/exp8/decode-morph-man-kws.xml')
+	os.system('./normalise --kwsfile ./output/exp8/decode-morph-man-kws.xml --outputfile ./output/exp8/decode-morph-man-norm.xml')
+	os.system('./../scripts/score.sh ./output/exp8/decode-morph-man-norm.xml output/exp8')
+	r = results('decode-morph-manual.xml','./output/exp8/decode-morph-man-norm.xml','output/exp8')
+
+
+	os.system('./genindexer --ctmfile ./../lib/ctms/decode-morph.ctm --outputfile ./output/exp8/reference-morph-man.pkl')
+	os.system('./genkws --indxfile ./output/exp8/reference-morph-man.pkl \
+			--queryfile ./output/exp8/queries-morph.xml \
+			--outputfile ./output/exp8/reference-morph-man-kws.xml')
+	os.system('./normalise --kwsfile ./output/exp8/reference-morph-man-kws.xml --outputfile ./output/exp8/decode-morph-norm.xml')
+	os.system('./../scripts/score.sh ./output/exp8/decode-morph-norm.xml output/exp8')
+	r = results('decode-morph.xml','./output/exp8/decode-morph-norm.xml','output/exp8')
+
+
+def exp7():
+	os.system('echo \'\\n\' >> results.txt')
+	os.system('echo Max for combination, With No Normalisation >> results.txt')
+	os.system('rm -rf output/exp7')
+	os.system('mkdir output/exp7')
+	os.system('./genindexer --ctmfile ./../lib/ctms/decode.ctm --outputfile ./output/exp7/decode.pkl')
+	os.system('./genkws --indxfile ./output/exp7/decode.pkl --outputfile ./output/exp7/decode-kws.xml')
+	os.system('./../scripts/score.sh output/exp7/decode-kws.xml output/exp7')
+	r = results('decode.xml','output/exp7/decode-kws.xml','output/exp7')
+
+	os.system('./../scripts/score.sh ./../lib/kws/word.xml output/exp7')
+	r = results('word.xml','./../lib/kws/word.xml','output/exp7')
+	os.system('./../scripts/score.sh ./../lib/kws/word-sys2.xml output/exp7')
+	r = results('word-sys2.xml','./../lib/kws/word-sys2.xml','output/exp7')
+	os.system('./../scripts/score.sh ./../lib/kws/morph.xml output/exp7')
+	r = results('morph.xml','./../lib/kws/morph.xml','output/exp7')
+
+	os.system('./morphctm --ctmfile ./../lib/ctms/decode.ctm --dictfile ./../lib/dicts/morph.dct --outputfile ./output/exp7/decode-morph-man.ctm')
+	os.system('./morphqueries --queryfile ./../lib/kws/queries.xml \
+			--dictfile ./../lib/dicts/morph.kwslist.dct \
+			--outputfile ./output/exp7/queries-morph.xml')
+	os.system('./genindexer --ctmfile ./output/exp7/decode-morph-man.ctm --outputfile ./output/exp7/decode-morph-man.pkl')
+	os.system('./genkws --indxfile ./output/exp7/decode-morph-man.pkl \
+			--queryfile ./output/exp7/queries-morph.xml \
+			--outputfile ./output/exp7/decode-morph-man-kws.xml')
+	os.system('./../scripts/score.sh output/exp7/decode-morph-man-kws.xml output/exp7')
+	r = results('decode-morph-man.xml','output/exp7/decode-morph-man-kws.xml','output/exp7')
+
+	os.system('./genindexer --ctmfile ./../lib/ctms/decode-morph.ctm --outputfile ./output/exp7/reference-morph-man.pkl')
+	os.system('./genkws --indxfile ./output/exp7/reference-morph-man.pkl \
+			--queryfile ./output/exp7/queries-morph.xml \
+			--outputfile ./output/exp7/reference-morph-man-kws.xml')
+	os.system('./../scripts/score.sh output/exp7/reference-morph-man-kws.xml output/exp7')
+	r = results('decode-morph.xml','output/exp7/reference-morph-man-kws.xml','output/exp7')
+
+	
+
+def exp9():
+	os.system('echo \'\\n\' >> results.txt')
+	os.system('echo System combination, With No Normalisation >> results.txt')
+	os.system('rm -rf output/exp9')
+	os.system('mkdir output/exp9')
+	
+	os.system('./../scripts/score.sh ./../lib/kws/word.xml output/exp9')
+	r = results('word.xml','./../lib/kws/word.xml','output/exp9')
+	os.system('./../scripts/score.sh ./../lib/kws/word-sys2.xml output/exp9')
+	r = results('word-sys2.xml','./../lib/kws/word-sys2.xml','output/exp9')
+	os.system('./../scripts/score.sh ./../lib/kws/morph.xml output/exp9')
+	r = results('morph.xml','./../lib/kws/morph.xml','output/exp9')
+	
+
+	os.system('./syscombine --sys1file ./../lib/kws/word-sys2.xml --sys2file ./../lib/kws/word.xml --outputfile ./output/exp9/c1.xml')
+	os.system('./syscombine --sys1file ./../lib/kws/word-sys2.xml --sys2file ./../lib/kws/morph.xml --outputfile ./output/exp9/c2.xml')
+	os.system('./syscombine --sys1file ./../lib/kws/word.xml --sys2file ./../lib/kws/morph.xml --outputfile ./output/exp9/c3.xml')
+	os.system('./syscombine --sys1file ./../lib/kws/word-sys2.xml --sys2file ./output/exp9/c3.xml --outputfile ./output/exp9/c33.xml')
+	os.system('./syscombine --sys1file ./output/exp9/c1.xml --sys2file ./../lib/kws/morph.xml --outputfile ./output/exp9/c11.xml')
+	os.system('./syscombine --sys1file ./../lib/kws/word.xml --sys2file ./output/exp9/c2.xml --outputfile ./output/exp9/c22.xml')
+
+	os.system('./../scripts/score.sh ./output/exp9/c1.xml output/exp9')
+	os.system('./../scripts/score.sh ./output/exp9/c2.xml output/exp9')
+	os.system('./../scripts/score.sh ./output/exp9/c3.xml output/exp9')
+	r = results('word + word-sys2','./output/exp9/c1.xml','output/exp9')
+	r = results('word-sys2 + morph','./output/exp9/c2.xml','output/exp9')
+	r = results('word + morph','./output/exp9/c3.xml','output/exp9')
+	os.system('./normalise --kwsfile ./output/exp9/c1.xml --outputfile ./output/exp9/c1-norm.xml')
+	os.system('./normalise --kwsfile ./output/exp9/c2.xml --outputfile ./output/exp9/c2-norm.xml')
+	os.system('./normalise --kwsfile ./output/exp9/c3.xml --outputfile ./output/exp9/c3-norm.xml')
+	os.system('./normalise --kwsfile ./output/exp9/c11.xml --outputfile ./output/exp9/c11-norm.xml')
+	os.system('./normalise --kwsfile ./output/exp9/c22.xml --outputfile ./output/exp9/c22-norm.xml')
+	os.system('./normalise --kwsfile ./output/exp9/c33.xml --outputfile ./output/exp9/c33-norm.xml')
+	
+	os.system('./../scripts/score.sh ./output/exp9/c1-norm.xml output/exp9')
+	os.system('./../scripts/score.sh ./output/exp9/c2-norm.xml output/exp9')
+	os.system('./../scripts/score.sh ./output/exp9/c3-norm.xml output/exp9')
+	r = results('n word + word-sys2','./output/exp9/c1-norm.xml','output/exp9')
+	r = results('n word-sys2 + morph','./output/exp9/c2-norm.xml','output/exp9')
+	r = results('n word + morph','./output/exp9/c3-norm.xml','output/exp9')
+	os.system('./../scripts/score.sh ./output/exp9/c11-norm.xml output/exp9')
+	os.system('./../scripts/score.sh ./output/exp9/c22-norm.xml output/exp9')
+	os.system('./../scripts/score.sh ./output/exp9/c33-norm.xml output/exp9')
+	r = results('n word + word-sys2 + morph','./output/exp9/c11-norm.xml','output/exp9')
+	r = results('n word-sys2 + morph + word','./output/exp9/c22-norm.xml','output/exp9')
+	r = results('n word + morph + word-sys2','./output/exp9/c33-norm.xml','output/exp9')
+	
+	tmv11 = tmv('./output/c1.xml','./output/exp9')
+	tmv22 = tmv('./output/c2.xml','./output/exp9')
+	tmv33 = tmv('./output/c3.xml','./output/exp9')
+	
+	tmv1 = tmv('./../lib/kws/word.xml','./output/exp9')
+	tmv2 = tmv('./../lib/kws/word-sys2.xml','./output/exp9')
+	tmv3 = tmv('./../lib/kws/morph.xml','./output/exp9')
+	w1,w2 = exponen(tmv2,tmv1)
+	print str(w1)+ ' ' + str(w2)
+	os.system('./syscombine --sys1file ./../lib/kws/word-sys2.xml --sys2file ./../lib/kws/word.xml --outputfile ./output/exp9/c1.xml --w1 '+ str(w1) + ' --w2 '+str(w2))
+	w1,w2 = exponen(tmv2,tmv3)
+	os.system('./syscombine --sys1file ./../lib/kws/word-sys2.xml --sys2file ./../lib/kws/morph.xml --outputfile ./output/exp9/c2.xml --w1 '+ str(w1) + ' --w2 '+str(w2))
+	print str(w1)+ ' ' + str(w2)
+	w1,w2 = exponen(tmv1,tmv3)
+	os.system('./syscombine --sys1file ./../lib/kws/word.xml --sys2file ./../lib/kws/morph.xml --outputfile ./output/exp9/c3.xml --w1 '+ str(w1) + ' --w2 '+str(w2))
+	print str(w1)+ ' ' + str(w2)
+	r = results('w word + word-sys2','./output/exp9/c1.xml','output/exp9')
+	r = results('w word-sys2 + morph','./output/exp9/c2.xml','output/exp9')
+	r = results('w word + morph','./output/exp9/c3.xml','output/exp9')
+
+	os.system('./normalise --kwsfile ./output/exp9/c1.xml --outputfile ./output/exp9/c1-norm.xml')
+	os.system('./normalise --kwsfile ./output/exp9/c2.xml --outputfile ./output/exp9/c2-norm.xml')
+	os.system('./normalise --kwsfile ./output/exp9/c3.xml --outputfile ./output/exp9/c3-norm.xml')
+	
+	os.system('./../scripts/score.sh ./output/exp9/c1-norm.xml output/exp9')
+	os.system('./../scripts/score.sh ./output/exp9/c2-norm.xml output/exp9')
+	os.system('./../scripts/score.sh ./output/exp9/c3-norm.xml output/exp9')
+	r = results('nw word + word-sys2','./output/exp9/c1-norm.xml','output/exp9')
+	r = results('nw word-sys2 + morph','./output/exp9/c2-norm.xml','output/exp9')
+	r = results('nw word + morph','./output/exp9/c3-norm.xml','output/exp9')
+	'''
+	os.system('./normalise --kwsfile ./../lib/kws/word-sys2.xml --outputfile ./output/exp9/word-sys2-norm.xml')
+	os.system('./normalise --kwsfile ./../lib/kws/word.xml --outputfile ./output/exp9/word-norm.xml')
+	os.system('./normalise --kwsfile ./../lib/kws/morph.xml --outputfile ./output/exp9/morph-norm.xml')
+	
+
+	os.system('./syscombine --sys1file ./output/exp9/word-sys2-norm.xml --sys2file ./output/exp9/word-norm.xml --outputfile ./output/exp9/c1.xml')
+	os.system('./syscombine --sys1file ./output/exp9/word-sys2-norm.xml --sys2file ./output/exp9/morph-norm.xml --outputfile ./output/exp9/c2.xml')
+	os.system('./syscombine --sys1file ./output/exp9/word-norm.xml --sys2file ./output/exp9/morph-norm.xml --outputfile ./output/exp9/c3.xml')
+	os.system('./normalise --kwsfile ./output/exp9/c1.xml --outputfile ./output/exp9/c1-norm.xml')
+	os.system('./normalise --kwsfile ./output/exp9/c2.xml --outputfile ./output/exp9/c2-norm.xml')
+	os.system('./normalise --kwsfile ./output/exp9/c3.xml --outputfile ./output/exp9/c3-norm.xml')
+	
+	os.system('./../scripts/score.sh ./output/exp9/c1-norm.xml output/exp9')
+	os.system('./../scripts/score.sh ./output/exp9/c2-norm.xml output/exp9')
+	os.system('./../scripts/score.sh ./output/exp9/c3-norm.xml output/exp9')
+	r = results('nn word + word-sys2','./output/exp9/c1-norm.xml','output/exp9')
+	r = results('nn word-sys2 + morph','./output/exp9/c2-norm.xml','output/exp9')
+	r = results('nn word + morph','./output/exp9/c3-norm.xml','output/exp9')
+	
+
+	tmv1 = tmv('./output/exp9/word-norm.xml','./output/exp9')
+	tmv2 = tmv('./output/exp9/word-sys2-norm.xml','./output/exp9')
+	tmv3 = tmv('./output/exp9/morph-norm.xml','./output/exp9')
+	w1,w2 = exponen(tmv2,tmv1)
+	print str(w1)+ ' ' + str(w2)
+	os.system('./syscombine --sys1file ./output/exp9/word-sys2-norm.xml --sys2file ./output/exp9/word-norm.xml --outputfile ./output/exp9/c1.xml --w1 '+ str(w1) + ' --w2 '+str(w2))
+	w1,w2 = exponen(tmv2,tmv3)
+	os.system('./syscombine --sys1file ./output/exp9/word-sys2-norm.xml --sys2file ./output/exp9/morph-norm.xml --outputfile ./output/exp9/c2.xml --w1 '+ str(w1) + ' --w2 '+str(w2))
+	print str(w1)+ ' ' + str(w2)
+	w1,w2 = exponen(tmv1,tmv3)
+	os.system('./syscombine --sys1file ./output/exp8/word-norm.xml --sys2file ./output/exp9/morph-norm.xml --outputfile ./output/exp9/c3.xml --w1 '+ str(w1) + ' --w2 '+str(w2))
+	print str(w1)+ ' ' + str(w2)
+	os.system('./normalise --kwsfile ./output/exp9/c1.xml --outputfile ./output/exp9/c1-norm.xml')
+	os.system('./normalise --kwsfile ./output/exp9/c2.xml --outputfile ./output/exp9/c2-norm.xml')
+	os.system('./normalise --kwsfile ./output/exp9/c3.xml --outputfile ./output/exp9/c3-norm.xml')
+	
+	os.system('./../scripts/score.sh ./output/exp9/c1-norm.xml output/exp9')
+	os.system('./../scripts/score.sh ./output/exp9/c2-norm.xml output/exp9')
+	os.system('./../scripts/score.sh ./output/exp9/c3-norm.xml output/exp9')
+	r = results('nnw word + word-sys2','./output/exp9/c1-norm.xml','output/exp9')
+	r = results('nnw word-sys2 + morph','./output/exp9/c2-norm.xml','output/exp9')
+	r = results('nnw word + morph','./output/exp9/c3-norm.xml','output/exp9')
+	'''
+
+def exp10():
+	os.system('echo \'\\n\' >> results.txt')
+	os.system('echo System combination, With No Normalisation >> results.txt')
+	os.system('rm -rf output/exp10')
+	os.system('mkdir output/exp10')
+
+
+	
+	os.system('./genindexer --ctmfile ./../lib/ctms/decode.ctm --outputfile ./output/exp10/decode.pkl')
+	os.system('./genkws --indxfile ./output/exp10/decode.pkl --outputfile ./output/exp10/decode-kws.xml')
+	os.system('./../scripts/score.sh output/exp10/decode-kws.xml output/exp10')
+	r = results('decode.xml','output/exp10/decode-kws.xml','output/exp10')
+
+	os.system('./morphctm --ctmfile ./../lib/ctms/decode.ctm --dictfile ./../lib/dicts/morph.dct --outputfile ./output/exp10/decode-morph-man.ctm')
+	os.system('./morphqueries --queryfile ./../lib/kws/queries.xml \
+			--dictfile ./../lib/dicts/morph.kwslist.dct \
+			--outputfile ./output/exp10/queries-morph.xml')
+	os.system('./genindexer --ctmfile ./output/exp10/decode-morph-man.ctm --outputfile ./output/exp10/decode-morph-man.pkl')
+	os.system('./genkws --indxfile ./output/exp10/decode-morph-man.pkl \
+			--queryfile ./output/exp10/queries-morph.xml \
+			--outputfile ./output/exp10/decode-morph-man-kws.xml')
+	os.system('./../scripts/score.sh output/exp10/decode-morph-man-kws.xml output/exp10')
+	r = results('decode-morph-man.xml','output/exp10/decode-morph-man-kws.xml','output/exp10')
+
+	os.system('./genindexer --ctmfile ./../lib/ctms/decode-morph.ctm --outputfile ./output/exp10/reference-morph-man.pkl')
+	os.system('./genkws --indxfile ./output/exp10/reference-morph-man.pkl \
+			--queryfile ./output/exp10/queries-morph.xml \
+			--outputfile ./output/exp10/reference-morph-man-kws.xml')
+	os.system('./../scripts/score.sh output/exp10/reference-morph-man-kws.xml output/exp10')
+	r = results('decode-morph.xml','output/exp10/reference-morph-man-kws.xml','output/exp10')
+
+	
+	sys1 = './output/exp10/decode-kws.xml'
+	sys2 = './output/exp10/decode-morph-man-kws.xml'
+	sys3 = './output/exp10/reference-morph-man-kws.xml'
+	
+	os.system('./syscombine --sys1file '+sys1+' --sys2file '+sys2+' --outputfile ./output/exp10/c1.xml')
+	os.system('./syscombine --sys1file '+sys2+' --sys2file '+sys3+' --outputfile ./output/exp10/c2.xml')
+	os.system('./syscombine --sys1file '+sys1+' --sys2file '+sys3+' --outputfile ./output/exp10/c3.xml')
+	os.system('./../scripts/score.sh ./output/exp10/c1.xml output/exp10')
+	os.system('./../scripts/score.sh ./output/exp10/c2.xml output/exp10')
+	os.system('./../scripts/score.sh ./output/exp10/c3.xml output/exp10')
+	r = results('decode + decode-morph-gen','./output/exp10/c1.xml','output/exp10')
+	r = results('decode + morph','./output/exp10/c2.xml','output/exp10')
+	r = results('word + morph','./output/exp10/c3.xml','output/exp10')
+	os.system('./normalise --kwsfile ./output/exp10/c1.xml --outputfile ./output/exp10/c1-norm.xml')
+	os.system('./normalise --kwsfile ./output/exp10/c2.xml --outputfile ./output/exp10/c2-norm.xml')
+	os.system('./normalise --kwsfile ./output/exp10/c3.xml --outputfile ./output/exp10/c3-norm.xml')
+	
+	os.system('./../scripts/score.sh ./output/exp10/c1-norm.xml output/exp10')
+	os.system('./../scripts/score.sh ./output/exp10/c2-norm.xml output/exp10')
+	os.system('./../scripts/score.sh ./output/exp10/c3-norm.xml output/exp10')
+	r = results('decode + decode-morph-gen','./output/exp10/c1-norm.xml','output/exp10')
+	r = results('decode + morph','./output/exp10/c2-norm.xml','output/exp10')
+	r = results('word + morph','./output/exp10/c3-norm.xml','output/exp10')
+	
+	
+	tmv1 = tmv(sys1,'./output/exp10')
+	tmv2 = tmv(sys2,'./output/exp10')
+	tmv3 = tmv(sys3,'./output/exp10')
+	w1,w2 = exponen(tmv2,tmv1)
+	print str(w1)+ ' ' + str(w2)
+	os.system('./syscombine --sys1file '+sys2+' --sys2file '+sys1+' --outputfile ./output/exp10/c1.xml --w1 '+ str(w1) + ' --w2 '+str(w2))
+	w1,w2 = exponen(tmv2,tmv3)
+	os.system('./syscombine --sys1file '+sys2+' --sys2file '+sys3+' --outputfile ./output/exp10/c2.xml --w1 '+ str(w1) + ' --w2 '+str(w2))
+	print str(w1)+ ' ' + str(w2)
+	w1,w2 = exponen(tmv1,tmv3)
+	os.system('./syscombine --sys1file '+sys1+' --sys2file '+sys3+' --outputfile ./output/exp10/c3.xml --w1 '+ str(w1) + ' --w2 '+str(w2))
+	print str(w1)+ ' ' + str(w2)
+	r = results('decode + decode-morph-gen','./output/exp10/c1.xml','output/exp10')
+	r = results('decode + morph','./output/exp10/c2.xml','output/exp10')
+	r = results('word + morph','./output/exp10/c3.xml','output/exp10')
+	os.system('./normalise --kwsfile ./output/exp10/c1.xml --outputfile ./output/exp10/c1-norm.xml')
+	os.system('./normalise --kwsfile ./output/exp10/c2.xml --outputfile ./output/exp10/c2-norm.xml')
+	os.system('./normalise --kwsfile ./output/exp10/c3.xml --outputfile ./output/exp10/c3-norm.xml')
+	
+	os.system('./../scripts/score.sh ./output/exp10/c1-norm.xml output/exp10')
+	os.system('./../scripts/score.sh ./output/exp10/c2-norm.xml output/exp10')
+	os.system('./../scripts/score.sh ./output/exp10/c3-norm.xml output/exp10')
+	r = results('decode + decode-morph-gen','./output/exp10/c1-norm.xml','output/exp10')
+	r = results('decode + morph','./output/exp10/c2-norm.xml','output/exp10')
+	r = results('word + morph','./output/exp10/c3-norm.xml','output/exp10')
+	
+
+if __name__ == "__main__":
+	#exp7()
+	#exp8()
+	#exp9()
+	exp10()

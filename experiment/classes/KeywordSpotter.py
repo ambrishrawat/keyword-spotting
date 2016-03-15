@@ -4,7 +4,8 @@ import xml.dom.minidom as minidom
 
 def normalise(list1,nfactor):
 	for l1 in list1:
-		l1['score'] = l1.get('score')/nfactor
+		#l1['score'] = l1.get('score')/nfactor
+		l1['score'] = float(l1.get('score'))**(1.0/float(nfactor))
 #iterate till length of the string and generate all possible value pairs
 def consec(list1,list2):
 	l = []
@@ -14,21 +15,15 @@ def consec(list1,list2):
 			if l1.get('file_name') == l2.get('file_name') and \
 				l1.get('next') == l2.get('word') and \
 				((l2.get('tbeg')) - (l1.get('tbeg')) - (l1.get('dur'))<=0.5) and \
-				((l2.get('tbeg')) - (l1.get('tbeg')) - (l1.get('dur'))>-1e-10):
-				"""
-				if l1.get('next') == 'yako' and l1.get('word')=='namba':
-					#print 'YODA2 ' + l1.get('word') + ' ' + l1.get('tbeg') + ' ' + l1.get('dur') + ' '+ str(float(l1.get('tbeg')) + float(l1.get('dur')))
-					#print 'YODA3 ' + l2.get('word') + ' ' + str(float(l2.get('tbeg'))) + ' ' + l2.get('dur')
-					print str(float(l2.get('tbeg'))-float(l1.get('tbeg'))-float(l1.get('dur')))
-					print str(float(l1.get('tbeg'))+float(l1.get('dur')))
-				"""	
+				((l2.get('tbeg')) - (l1.get('tbeg')) - (l1.get('dur'))>-1e-5):
+					
 				d = {}
 				d['file_name'] = l1.get('file_name')
 				d['channel']  = l1.get('channel')
 				d['next'] = l2.get('next')
 				d['word'] = l1.get('word') +' '+l2.get('word')
 				d['dur'] = l2.get('tbeg') - l1.get('tbeg') + l2.get('dur')
-				d['score'] = l2.get('score') + l1.get('score')
+				d['score'] = (l2.get('score')*l1.get('score'))
 				d['tbeg'] = l1.get('tbeg')
 				l.append(d)
 				break
@@ -59,9 +54,6 @@ class KeywordSpotter:
 					vlist.append(d[k[i]])
 			if len(vlist)==len(k):
 				getlist = reduce(consec,vlist)
-				"""if kwid == "KW202-00077":
-					print "YODA"
-					print getlist"""
 				normalise(getlist,float(len(k)))
 				for g in getlist:
 					temp = et.SubElement(kwele,"kw",file=g.get('file_name'),\

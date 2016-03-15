@@ -8,7 +8,7 @@ class Indexer:
 
 	def indexer(self,f):
 		"""
-		Converts the received latice file into an indexer
+		Converts the received latice (1 best-hypothesis in this case) file into an indexer
 		Args
 			f - address to the input set of lattices (1-best hypotheses in this case)
 		Returns
